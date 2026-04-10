@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PhotoShare</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    header {
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .upload-box {
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    input {
+      margin-top: 10px;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      color: black;
+    }
+
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .card button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+    }
+
+    .card button:hover {
+      background: #5a67d8;
+    }
+  </style>
+</head>
+<body>
+
+<header>📸 PhotoShare</header>
+
+<div class="container">
+
+  <div class="upload-box">
+    <h2>Upload Image</h2>
+    <input type="file" id="upload" accept="image/*">
+  </div>
+
+  <div class="gallery" id="gallery"></div>
+
+</div>
+
+<script>
+  // 🔥 PUT YOUR FIREBASE CONFIG HERE
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const storage = firebase.storage();
+
+  const upload = document.getElementById('upload');
+  const gallery = document.getElementById('gallery');
+
+  // Upload image
+  upload.addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const ref = storage.ref('images/' + Date.now() + '_' + file.name);
+    await ref.put(file);
+
+    loadImages();
+  });
+
+  // Load all images
+  async function loadImages() {
+    gallery.innerHTML = '';
+
+    const listRef = storage.ref('images');
+    const res = await listRef.listAll();
+
+    for (let item of res.items) {
+      const url = await item.getDownloadURL();
+
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const img = document.createElement('img');
+      img.src = url;
+
+      const btn = document.createElement('button');
+      btn.innerText = 'Download';
+
+      btn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'image';
+        a.click();
+      };
+
+      card.appendChild(img);
+      card.appendChild(btn);
+
+      gallery.appendChild(card);
+    }
+  }
+
+  loadImages();
+</script>
+
+</body>
+</html>
